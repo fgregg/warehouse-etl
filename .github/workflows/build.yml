@@ -1,0 +1,43 @@
+name: Build Database
+
+concurrency: 
+  group: database-build
+
+# Controls when the action will run. 
+on:
+  # Uncomment this to run this workflow on a schedule
+  # schedule:
+    # * is a special character in YAML so you have to quote this string
+    # - cron:  '15 2 * * *'    
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup requirements
+        run: pip install -r requirements.txt
+      - name: build database
+        run: make
+
+      - name: prepare database for upload
+        run: zip name_of_database.zip
+ 
+      - name: release
+        uses: WebFreak001/deploy-nightly@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
+        with:
+          upload_url: https://uploads.github.com/repos/fgregg/cps-graduation-rates/releases/79709747/assets{?name,label}
+          release_id: 79709747
+          asset_path: ./cps_graduation_rates.db.zip # path to archive to upload
+          asset_name: cps_graduation_rates.db.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
+          asset_content_type: application/zip # required by GitHub API
+          max_releases: 7 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+      - name: keepalive
+        uses: gautamkrishnar/keepalive-workflow@v1
