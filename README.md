@@ -13,4 +13,4 @@ Generated data should in a release. I typically, [create a release](https://docs
 ```bash
 > pip install -r requirements.txt
 > make
-``
+```
