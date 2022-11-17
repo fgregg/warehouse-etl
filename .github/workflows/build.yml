@@ -12,6 +12,9 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  
+env:
+  ASSET: name_of_database.zip
 
 jobs:
   build:
@@ -24,19 +27,18 @@ jobs:
         run: pip install -r requirements.txt
       - name: build database
         run: make
-
       - name: prepare database for upload
-        run: zip name_of_database.zip
- 
-      - name: release
+        run: zip ${{ env.ASSET}} name_of_database.db
+      - name: release # if you have large artifacts upload to a repo's release.
         uses: WebFreak001/deploy-nightly@v1.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by github actions
+          RELEASE_ID: 790947 # find out this value by opening https://api.github.com/repos/<owner>/<repo>/releases in your browser and copy the "id" value
         with:
-          upload_url: https://uploads.github.com/repos/fgregg/cps-graduation-rates/releases/79709747/assets{?name,label}
-          release_id: 79709747
-          asset_path: ./cps_graduation_rates.db.zip # path to archive to upload
-          asset_name: cps_graduation_rates.db.zip # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
+          upload_url: https://uploads.github.com/repos/${{ env.GITHUB_REPOSITORY }}/releases/${{ env.RELEASE_ID }}/assets{?name,label}
+          release_id: ${{ env.RELEASE_ID }}
+          asset_path: ${{ env.ASSET }}
+          asset_name: $${ env.ASSET }} # name to upload the release as, use $$ to insert date (YYYYMMDD) and 6 letter commit hash
           asset_content_type: application/zip # required by GitHub API
           max_releases: 7 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
       - name: keepalive
